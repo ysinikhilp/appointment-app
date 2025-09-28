@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Appointment Manager</title>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; }
+    form { margin-bottom: 20px; }
+    input, button { margin: 5px; }
+    ul { padding: 0; list-style: none; }
+    li { margin: 8px 0; }
+  </style>
+</head>
+<body>
+  <h1>Appointment Manager</h1>
+  <form id="form">
+    <input type="text" id="name" placeholder="Name" required />
+    <input type="date" id="date" required />
+    <input type="time" id="time" required />
+    <button type="submit">Add</button>
+  </form>
+  <ul id="appointments"></ul>
+
+  <script>
+    const form = document.getElementById("form");
+    const list = document.getElementById("appointments");
+
+    async function fetchAppointments() {
+      const res = await fetch("/appointments");
+      const data = await res.json();
+      list.innerHTML = "";
+      data.forEach(app => {
+        const li = document.createElement("li");
+        li.textContent = `${app.name} - ${app.date} at ${app.time}`;
+        const btn = document.createElement("button");
+        btn.textContent = "Delete";
+        btn.onclick = async () => {
+          await fetch(`/appointments/${app.id}`, { method: "DELETE" });
+          fetchAppointments();
+        };
+        li.appendChild(btn);
+        list.appendChild(li);
+      });
+    }
+
+    form.onsubmit = async (e) => {
+      e.preventDefault();
+      const name = document.getElementById("name").value;
+      const date = document.getElementById("date").value;
+      const time = document.getElementById("time").value;
+
+      await fetch("/appointments", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, date, time }),
+      });
+
+      form.reset();
+      fetchAppointments();
+    };
+
+    fetchAppointments();
+  </script>
+</body>
+</html>
